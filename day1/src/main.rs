@@ -7,18 +7,20 @@ fn main() {
     // part 1
     let mut calories = vec![0];
     for line in reader.lines() {
-        match line.unwrap().as_str() {
-            "" => calories.push(0),
-            s => {
-                if let Some(number) = calories.last_mut() {
-                    *number += s.parse::<i32>().unwrap()
+        if let Ok(s) = line {
+            match s.as_str() {
+                "" => calories.push(0),
+                s => {
+                    if let Some(number) = calories.last_mut() {
+                        *number += s.parse::<i32>().expect("could not convert to i32")
+                    }
                 }
             }
         }
     }
     println!(
         "Solution to day 1, part 1: {}",
-        calories.iter().max().unwrap()
+        calories.iter().max().expect("no maximum found")
     );
 
     calories.sort();
