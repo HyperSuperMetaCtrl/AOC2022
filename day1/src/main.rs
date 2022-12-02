@@ -24,11 +24,11 @@ fn main() {
     );
 
     calories.sort();
-    let mut acc = 0;
+    let res = calories
+        .iter()
+        .rev()
+        .take(3)
+        .fold(0 ,|acc, c| acc + c);
 
-    for c in calories.iter().rev().take(3) {
-        acc += c;
-    }
-
-    print!("Part 2: {}", acc);
+    print!("Part 2: {}", res);
 }
