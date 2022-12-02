@@ -2,9 +2,7 @@ use anyhow::Result;
 use std::{env, fs::read_to_string};
 
 const FILENAME: &str = "input.txt";
-// how to represent moves?
-// how to represent win/lose conditions
-//
+
 const ROCK_VAL: usize = 1;
 const PAPER_VAL: usize = 2;
 const SCISSORS_VAL: usize = 3;
@@ -36,14 +34,8 @@ fn score_by_win(round: &str) -> usize {
     let enemy_choice = round.split(" ").nth(0).unwrap_or("");
     let my_choice = round.split(" ").nth(1).unwrap_or("");
     match (enemy_choice, my_choice) {
-        (EN_ROCK, PAPER) => WIN,
-        (EN_PAPER, SCISSORS) => WIN,
-        (EN_SCISSORS, ROCK) => WIN,
-
-        (EN_ROCK, SCISSORS) => LOSE,
-        (EN_PAPER, ROCK) => LOSE,
-        (EN_SCISSORS, PAPER) => LOSE,
-
+        (EN_ROCK, PAPER) | (EN_PAPER, SCISSORS) | (EN_SCISSORS, ROCK) => WIN,
+        (EN_ROCK, SCISSORS) | (EN_PAPER, ROCK) | (EN_SCISSORS, PAPER) => LOSE,
         (EN_ROCK, ROCK) | (EN_PAPER, PAPER) | (EN_SCISSORS, SCISSORS) => DRAW,
         _ => 0,
     }
