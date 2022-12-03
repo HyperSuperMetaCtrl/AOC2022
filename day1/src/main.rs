@@ -1,25 +1,23 @@
-use std::{fs::File, io::BufRead, io::BufReader};
+use anyhow::Result;
+use std::fs::read_to_string;
 
-fn main() {
+fn main() -> Result<()>{
     // open the file
-    let file = File::open("input.txt").unwrap();
-    let reader = BufReader::new(file);
+    let input = read_to_string("input.txt")?;
     // part 1
     let mut calories = vec![0];
-    for line in reader.lines() {
-        if let Ok(s) = line {
-            match s.as_str() {
-                "" => calories.push(0),
-                s => {
-                    if let Some(number) = calories.last_mut() {
-                        *number += s.parse::<i32>().expect("could not convert to i32")
-                    }
+    for line in input.lines() {
+        match line {
+            "" => calories.push(0),
+            s => {
+                if let Some(number) = calories.last_mut() {
+                    *number += s.parse::<i32>()?
                 }
             }
         }
     }
     println!(
-        "Solution to day 1, part 1: {}",
+        "Day 1 Part 1: {}",
         calories.iter().max().expect("no maximum found")
     );
 
@@ -30,5 +28,7 @@ fn main() {
         .take(3)
         .fold(0 ,|acc, c| acc + c);
 
-    print!("Part 2: {}", res);
+    print!("Day 1 Part 2: {}", res);
+
+    Ok(())
 }
