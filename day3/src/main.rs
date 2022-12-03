@@ -1,14 +1,14 @@
 use anyhow::Result;
-use std::fs::read_to_string;
 use std::env;
+use std::fs::read_to_string;
 const FILENAME: &str = "input.txt";
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 struct BitField(u64);
 
 impl From<&str> for BitField {
     fn from(s: &str) -> Self {
-       let bits_to_set: Vec<usize> = s.chars().map(|c| Self::char2index(c)).collect();
+        let bits_to_set: Vec<usize> = s.chars().map(|c| Self::char2index(c)).collect();
         BitField::from(bits_to_set)
     }
 }
@@ -25,7 +25,7 @@ impl From<Vec<usize>> for BitField {
 }
 
 impl BitField {
-    fn new()-> Self {
+    fn new() -> Self {
         BitField(0)
     }
     fn char2index(c: char) -> usize {
@@ -37,43 +37,41 @@ impl BitField {
     }
     fn set_bit(&mut self, bit: usize) {
         let mut bits = self.0;
-        bits = bits | 1<<bit;
+        bits = bits | 1 << bit;
         self.0 = bits;
     }
 
-    fn prio(a: BitField,b: BitField) -> usize {
+    fn prio(a: BitField, b: BitField) -> usize {
         let mut priority = a.0 & b.0;
         let mut count = 0;
-        while priority>1 {
+        while priority > 1 {
             priority >>= 1;
             count += 1;
-        } 
+        }
         count
     }
 
-    fn prio_3(a: BitField,b: BitField, c: BitField) -> usize {
+    fn prio_3(a: BitField, b: BitField, c: BitField) -> usize {
         let mut priority = a.0 & b.0 & c.0;
         let mut count = 0;
-        while priority>1 {
+        while priority > 1 {
             priority >>= 1;
             count += 1;
-        } 
+        }
         count
-
-
     }
 }
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
     let input = read_to_string(path)?;
-    
+
     let sum: usize = input
         .lines()
-        .map(|line| line.split_at(line.len()/2))
-        .map(|(left, right)| (BitField::from(left),BitField::from(right)))
-        .map(|(a,b)| BitField::prio(a,b))
+        .map(|line| line.split_at(line.len() / 2))
+        .map(|(left, right)| (BitField::from(left), BitField::from(right)))
+        .map(|(a, b)| BitField::prio(a, b))
         .sum();
     println!("Day 3 Part 1: {sum}");
     let sum: usize = input
@@ -81,20 +79,18 @@ fn main() -> Result<()>{
         .map(|line| BitField::from(line))
         .collect::<Vec<BitField>>()
         .chunks_exact(3)
-        .map(|x| {
-            BitField::prio_3(x[0],x[1],x[2])
-        })
+        .map(|x| BitField::prio_3(x[0], x[1], x[2]))
         .sum();
     println!("Day 3 Part 2: {sum}");
-    
+
     Ok(())
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
-    #[test] 
+    #[test]
     fn test_prio() {
         let a = BitField(2);
         let b = BitField(2);
@@ -103,8 +99,8 @@ mod tests{
     #[test]
     fn splitting() {
         let s = "1234";
-        let split = s.split_at(s.len()/2);
-        assert_eq!(("12","34"), split);
+        let split = s.split_at(s.len() / 2);
+        assert_eq!(("12", "34"), split);
     }
     #[test]
     fn set_bit() {
