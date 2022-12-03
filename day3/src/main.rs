@@ -35,24 +35,24 @@ impl BitField {
             _ => 0,
         }
     }
+
     fn set_bit(&mut self, bit: usize) {
         let mut bits = self.0;
         bits = bits | 1 << bit;
         self.0 = bits;
     }
 
-    fn prio(a: BitField, b: BitField) -> usize {
-        let mut priority = a.0 & b.0;
-        let mut count = 0;
-        while priority > 1 {
-            priority >>= 1;
-            count += 1;
-        }
-        count
+    fn prio(a: Self, b: Self) -> usize {
+        let priority = a.0 & b.0;
+        Self::count(priority)
     }
 
-    fn prio_3(a: BitField, b: BitField, c: BitField) -> usize {
-        let mut priority = a.0 & b.0 & c.0;
+    fn prio_3(a: Self, b: Self, c: Self) -> usize {
+        let priority = a.0 & b.0 & c.0;
+        Self::count(priority)
+    }
+
+    fn count(mut priority: u64) -> usize {
         let mut count = 0;
         while priority > 1 {
             priority >>= 1;
