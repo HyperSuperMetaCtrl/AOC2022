@@ -35,11 +35,13 @@ impl TryFrom<char> for MaybeCrate {
 fn parse_crates(line: &str) -> Layer {
     lazy_static! {
         //shoud fail at compile if Regex is not correct
-        static ref RE: Regex = Regex::new(r"(\[(?:[A-Z])\]|\s(?:\s)\s|\s(?:\d)\s)\s?").unwrap(); 
+        static ref RE: Regex = Regex::new(r"(\[(?:[A-Z])\]|\s(?:\s)\s|\s(?:\d)\s)\s?").unwrap();
     };
     Layer(
         RE.captures_iter(line)
-            .filter_map(|x| MaybeCrate::try_from(x[1].chars().nth(1).expect("Regex didn't match")).ok())
+            .filter_map(|x| {
+                MaybeCrate::try_from(x[1].chars().nth(1).expect("Regex didn't match")).ok()
+            })
             .collect(),
     )
 }
@@ -50,10 +52,10 @@ fn stack_layers(layers: Vec<Layer>) -> Vec<Stack> {
         v.push(Stack(Vec::new()))
     }
     for layer in layers.iter().rev() {
-        for (i,cr) in layer.0.iter().enumerate() {
+        for (i, cr) in layer.0.iter().enumerate() {
             if let MaybeCrate(Some(c)) = cr {
-               v[i].0.push(Crate(*c)) 
-        } 
+                v[i].0.push(Crate(*c))
+            }
         }
     }
     v
@@ -65,11 +67,11 @@ struct Instruction {
     to: usize,
 }
 fn parse_instruction(line: &str) -> Result<Instruction> {
-    let instr:Vec<&str> = line.split(" ").collect();
+    let instr: Vec<&str> = line.split(" ").collect();
     Ok(Instruction {
         how_many: str::parse::<usize>(instr[1])?,
-        from: str::parse::<usize>(instr[3])? -1, // -1 to convert from stack to vec index
-        to: str::parse::<usize>(instr[5])? -1,
+        from: str::parse::<usize>(instr[3])? - 1, // -1 to convert from stack to vec index
+        to: str::parse::<usize>(instr[5])? - 1,
     })
 }
 fn main() -> Result<()> {
@@ -92,7 +94,10 @@ fn main() -> Result<()> {
     let stacks = stack_layers(layers);
     dbg!(stacks);
 
-    let instructions: Vec<Instruction> = instructions.lines().filter_map(|line| parse_instruction(line).ok()).collect();
+    let instructions: Vec<Instruction> = instructions
+        .lines()
+        .filter_map(|line| parse_instruction(line).ok())
+        .collect();
     dbg!(instructions);
 
     Ok(())
