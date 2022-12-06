@@ -1,6 +1,82 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use itertools::Itertools;
+use lazy_static::lazy_static;
+use regex::Regex;
+use std::{env, fs::read_to_string};
 
-fn main() -> Result<()> {
-    Ok(())
+const FILENAME: &str = "input.txt";
+const NUM_STACKS: usize = 9;
+
+#[derive(Debug)]
+struct Layer(Vec<MaybeCrate>);
+
+#[derive(Debug)]
+struct Stack(Vec<Crate>);
+
+#[derive(Debug, Clone)]
+struct MaybeCrate(Option<char>);
+
+#[derive(Debug, Clone)]
+struct Crate(char);
+
+impl TryFrom<char> for MaybeCrate {
+    type Error = &'static str;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        if value.is_alphabetic() && value.is_uppercase() {
+            Ok(MaybeCrate(Some(value)))
+        } else if value.is_whitespace() {
+            Ok(MaybeCrate(None))
+        } else {
+            Err("MaybeCrate has to be a Uppercase Letter or Space")
+        }
+    }
 }
 
+fn parse_crates(line: &str) -> Layer {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"(\[(?:[A-Z])\]|\s(?:\s)\s|\s(?:\d)\s)\s?").unwrap();
+    };
+    Layer(
+        RE.captures_iter(line)
+            .filter_map(|x| MaybeCrate::try_from(x[1].chars().nth(1).expect("Regex didn't match")).ok())
+            .collect(),
+    )
+}
+
+fn stack_layers(layers: Vec<Layer>) -> Vec<Stack> {
+    let mut v: Vec<Stack> = Vec::new();
+    for _ in 0..NUM_STACKS {
+        v.push(Stack(Vec::new()))
+    }
+    for layer in layers.iter().rev() {
+        for (i,cr) in layer.0.iter().enumerate() {
+            if let MaybeCrate(Some(c)) = cr {
+               v[i].0.push(Crate(*c)) 
+        } 
+        }
+    }
+    v
+}
+
+fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+    let path = if args.len() >= 2 { &args[1] } else { FILENAME };
+
+    let input = read_to_string(path)?;
+
+    let (start_configuration, instructions) = input
+        .split("\n\n")
+        .collect_tuple()
+        .expect("could not collect into tuple");
+
+    let mut layers: Vec<Layer> = start_configuration
+        .lines()
+        .map(|line| parse_crates(line))
+        .collect();
+    layers.pop();
+
+    let stacks = stack_layers(layers);
+
+    dbg!(stacks);
+    Ok(())
+}
