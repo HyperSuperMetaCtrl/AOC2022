@@ -3,30 +3,67 @@ use std::{env, fs::File, io::Read};
 
 const FILENAME: &str = "input.txt";
 
+struct BitSet(u32);
+
+impl BitSet {
+    fn new() -> Self {
+        BitSet(0)
+    }
+    fn set(&mut self, bit: u32) {
+        self.0 |= bit;
+    }
+    fn clear(&mut self, bit: u32) {
+        self.0 &= !bit;
+    }
+    fn reset(&mut self) {
+        self.0 = 0;
+    }
+    fn check(&self, bit: u32) -> bool {
+        if self.0 & bit > 1 {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+fn find_marker(data: &Vec<u8>, marker_length: usize) -> Option<usize> {
+    if let Some(index) = data
+        .iter()
+        .map(|b| 2_u32.pow((*b as u32).saturating_sub(97)))
+        .collect::<Vec<u32>>()
+        .as_slice()
+        .windows(marker_length)
+        .enumerate()
+        .filter(|(_, s)| {
+            let mut bs = BitSet::new();
+            for bit in s.into_iter() {
+                if !bs.check(*bit) {
+                    bs.set(*bit);
+                } else {
+                    return false;
+                }
+            }
+            true
+        })
+        .map(|(i, _)| i)
+        .collect::<Vec<_>>()
+        .get(0)
+    {
+        Some(index + marker_length)
+    } else {
+        None
+    }
+}
 fn main() -> Result<()> {
-    let args: Vec<_> = env::args().collect();
+    let args: Vec<String> = env::args().collect();
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
 
     let mut file = File::open(path)?;
     let mut input = Vec::new();
     file.read_to_end(&mut input)?;
 
-    let index = input
-        .into_iter()
-        .as_slice()
-        .windows(4)
-        .enumerate()
-        .filter(|(_, s)| {
-            !((s[0] == s[1])
-                || (s[0] == s[2])
-                || (s[0] == s[3])
-                || (s[1] == s[2])
-                || (s[1] == s[3])
-                || (s[2] == s[3])) //meh
-        })
-        .map(|(i, _)| i)
-        .collect::<Vec<_>>();
-
-    println!("Day 6 Part 1: {}", index[0] + 4);
+    println!("Day 6 Part 1: {}", find_marker(&input, 4).unwrap());
+    println!("Day 6 Part 2: {}", find_marker(&input, 14).unwrap());
     Ok(())
 }
