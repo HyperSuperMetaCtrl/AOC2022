@@ -12,12 +12,6 @@ impl BitSet {
     fn set(&mut self, bit: u32) {
         self.0 |= bit;
     }
-    fn clear(&mut self, bit: u32) {
-        self.0 &= !bit;
-    }
-    fn reset(&mut self) {
-        self.0 = 0;
-    }
     fn check(&self, bit: u32) -> bool {
         if self.0 & bit > 1 {
             true
