@@ -34,7 +34,8 @@ impl TryFrom<char> for MaybeCrate {
 
 fn parse_crates(line: &str) -> Layer {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(\[(?:[A-Z])\]|\s(?:\s)\s|\s(?:\d)\s)\s?").unwrap();
+        //shoud fail at compile if Regex is not correct
+        static ref RE: Regex = Regex::new(r"(\[(?:[A-Z])\]|\s(?:\s)\s|\s(?:\d)\s)\s?").unwrap(); 
     };
     Layer(
         RE.captures_iter(line)
@@ -57,7 +58,20 @@ fn stack_layers(layers: Vec<Layer>) -> Vec<Stack> {
     }
     v
 }
-
+#[derive(Debug)]
+struct Instruction {
+    how_many: usize,
+    from: usize,
+    to: usize,
+}
+fn parse_instruction(line: &str) -> Result<Instruction> {
+    let instr:Vec<&str> = line.split(" ").collect();
+    Ok(Instruction {
+        how_many: str::parse::<usize>(instr[1])?,
+        from: str::parse::<usize>(instr[3])? -1, // -1 to convert from stack to vec index
+        to: str::parse::<usize>(instr[5])? -1,
+    })
+}
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
@@ -76,7 +90,10 @@ fn main() -> Result<()> {
     layers.pop();
 
     let stacks = stack_layers(layers);
-
     dbg!(stacks);
+
+    let instructions: Vec<Instruction> = instructions.lines().filter_map(|line| parse_instruction(line).ok()).collect();
+    dbg!(instructions);
+
     Ok(())
 }
