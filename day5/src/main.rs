@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{env, fs::read_to_string};
+use std::{env, fs::read_to_string, fmt::Display};
 
 const FILENAME: &str = "input.txt";
 const NUM_STACKS: usize = 9;
@@ -13,11 +13,22 @@ struct Layer(Vec<MaybeCrate>);
 #[derive(Debug)]
 struct Stack(Vec<Crate>);
 
+impl Display for Stack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.last().unwrap())
+    }
+}
+
 #[derive(Debug, Clone)]
 struct MaybeCrate(Option<char>);
 
 #[derive(Debug, Clone)]
 struct Crate(char);
+impl Display for Crate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl TryFrom<char> for MaybeCrate {
     type Error = &'static str;
@@ -74,6 +85,24 @@ fn parse_instruction(line: &str) -> Result<Instruction> {
         to: str::parse::<usize>(instr[5])? - 1,
     })
 }
+fn rearrange(stacks: &mut Vec<Stack>, instructions: Vec<Instruction>) {
+    for instruction in instructions {
+        let from = instruction.from;
+        let to = instruction.to;
+        for _ in 0..instruction.how_many {
+            let item = stacks[from].0.pop();
+            stacks[to].0.push(item.unwrap());
+        }
+    }
+}
+
+fn result_part1(stacks: Vec<Stack>) {
+    print!("Day 5 Part 1:");
+    for s in stacks {
+        print!("{}", s);
+    }
+    println!();
+}
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
@@ -91,14 +120,15 @@ fn main() -> Result<()> {
         .collect();
     layers.pop();
 
-    let stacks = stack_layers(layers);
-    dbg!(stacks);
-
     let instructions: Vec<Instruction> = instructions
         .lines()
         .filter_map(|line| parse_instruction(line).ok())
         .collect();
-    dbg!(instructions);
+
+    let mut stacks = stack_layers(layers);
+    
+    rearrange(&mut stacks, instructions);
+    result_part1(stacks);
 
     Ok(())
 }
