@@ -85,7 +85,7 @@ fn parse_instruction(line: &str) -> Result<Instruction> {
         to: str::parse::<usize>(instr[5])? - 1,
     })
 }
-fn rearrange(stacks: &mut Vec<Stack>, instructions: Vec<Instruction>) {
+fn rearrange(stacks: &mut Vec<Stack>, instructions: &Vec<Instruction>) {
     for instruction in instructions {
         let from = instruction.from;
         let to = instruction.to;
@@ -127,7 +127,7 @@ fn main() -> Result<()> {
 
     let mut stacks = stack_layers(layers);
     
-    rearrange(&mut stacks, instructions);
+    rearrange(&mut stacks, &instructions);
     result_part1(stacks);
 
     Ok(())
