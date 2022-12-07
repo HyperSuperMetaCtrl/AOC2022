@@ -24,7 +24,7 @@ impl BitSet {
 fn find_marker(data: &Vec<u8>, marker_length: usize) -> Option<usize> {
     if let Some(index) = data
         .iter()
-        .map(|b| 2_u32.pow((*b as u32).saturating_sub(97)))
+        .map(|b| 2_u32.pow((*b as u32).saturating_sub(97))) // convert ASCII-range 97-122 to 0-25
         .collect::<Vec<u32>>()
         .as_slice()
         .windows(marker_length)
