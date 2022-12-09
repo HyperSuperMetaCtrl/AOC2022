@@ -1,5 +1,8 @@
 use anyhow::Result;
-use std::{cell::RefCell, env, fs::read_to_string, rc::Rc, rc::Weak};
+
+use std::{env, fs::read_to_string};
+
+use day7::tree::*;
 
 const FILENAME: &str = "input.txt";
 
@@ -29,40 +32,33 @@ fn main() -> Result<()> {
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
     let input = read_to_string(path)?;
     let parsed = parse_input(&input);
-    dbg!(parsed);
+
+    let mut pwd: Vec<String> = vec![];
+    let mut pwd_id: NodeId;
+
+    // for command in parsed {
+    //     match command {
+    //         Command::LS(children) => todo!(),
+    //         Command::CD("..") => todo!(),
+    //         Command::CD(directory) => todo!(),
+    //     }
+    // }
+
+    let mut fs = Tree::<File>::new();
 
     Ok(())
 }
 
-struct Element<'a> {
+#[derive(Debug)]
+struct File<'a> {
     name: &'a str,
     size: Option<usize>,
 }
 
-enum File<'a> {
-    File(Element<'a>),
-    Directory(Element<'a>),
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-struct Tree<T> {
-    nodes: Vec<Node<T>>,
-}
-
-struct NodeId {
-    index: usize,
-}
-
-struct Node<T> {
-    parent: Option<Weak<RefCell<Node<T>>>>,
-    children: Vec<Rc<RefCell<Node<T>>>>,
-    data: T,
-}
-
-impl<T> Tree<T> {
-    fn new() -> Self {
-        Tree { nodes: Vec::new() }
-    }
-    fn get(&self, id: NodeId) -> Option<&Node<T>> {
-        self.nodes.get(id.index)
-    }
+    #[test]
+    fn test_name() {}
 }
