@@ -16,23 +16,35 @@ pub struct Node<T> {
     id: NodeId,
     parent: Option<NodeId>,
     children: Vec<NodeId>,
-    data: T,
+    pub data: T,
+}
+
+impl<T> Node<T> {
+    pub fn id(&self) -> NodeId {
+        self.id
+    }
+    pub fn children(&self) -> &Vec<NodeId> {
+        &self.children
+    }
+    pub fn parent(&self) -> &Option<NodeId> {
+        &self.parent
+    }
 }
 
 impl<T> Tree<T> {
     pub fn new() -> Self {
         Self { arena: vec![] }
     }
-    pub fn add_node(&mut self, data: T) {
+    pub fn add_node(&mut self, data: T) -> NodeId {
+        let index = self.arena.len();
         let node = Node {
-            id: NodeId {
-                index: self.arena.len(),
-            },
+            id: NodeId { index },
             children: Vec::new(),
             parent: None,
-            data: data,
+            data,
         };
         self.arena.push(Some(RefCell::from(node)));
+        NodeId { index }
     }
     pub fn add_child(&mut self, parent_id: NodeId, child_id: NodeId) -> Result<()> {
         let Some(mut parent) = self.get_mut(parent_id) else {
@@ -50,7 +62,15 @@ impl<T> Tree<T> {
         }
         Ok(())
     }
-
+    pub fn children(&self, id: NodeId) -> Vec<NodeId> {
+        let Some(parent) = self.get(id) else {
+            return vec![];
+        };
+        parent.children.clone()
+    }
+    pub fn parent(&self, id: NodeId) -> Option<NodeId> {
+        self.get(id)?.parent
+    }
     pub fn get(&self, id: NodeId) -> Option<Ref<Node<T>>> {
         let node = self.arena.get(id.index)?;
         if let Some(node) = node {
