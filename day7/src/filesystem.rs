@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use day7::tree::*;
+use thiserror::Error;
 
 #[derive(Debug)]
 pub struct File {
@@ -15,9 +16,21 @@ pub struct FileSystem {
     root: NodeId,
 }
 
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("File not found")]
+    FileNotFoundError,
+    #[error("File already exists")]
+    FileAlreadyExistsError,
+    #[error("File name not allowed")]
+    FileNameNotAllowError,
+    #[error("Operation not permitted")]
+    OperationNotPermittedError,
+}
+
 impl FileSystem {
     pub fn new() -> Self {
-        let mut file = File {
+        let file = File {
             is_dir: true,
             name: "/".to_string(),
             size: None,
@@ -31,7 +44,7 @@ impl FileSystem {
         }
     }
 
-    pub fn cd(&mut self, file_name: &str) -> Result<()> {
+    pub fn cd(&mut self, file_name: &str) -> Result<(), Error> {
         match file_name {
             "/" => {
                 self.pwd = self.root;
@@ -41,7 +54,7 @@ impl FileSystem {
                 self.pwd = self
                     .file_tree
                     .parent(self.pwd)
-                    .ok_or(anyhow!("no parent"))?;
+                    .ok_or(Error::FileNotFoundError)?;
                 return Ok(());
             }
             _ => (),
@@ -57,42 +70,35 @@ impl FileSystem {
                 }
             }
         }
-        Err(anyhow!("directory not found"))
+        Err(Error::FileNotFoundError)
     }
-    pub fn mkfile(&mut self, file: &str, size: usize) -> Result<()> {
+    pub fn mkfile(&mut self, file: &str, size: usize) -> Result<(), Error> {
+        self.make_element(file, false, Some(size))
+    }
+    pub fn mkdir(&mut self, file: &str) -> Result<(), Error> {
+        self.make_element(file, true, None)
+    }
+    fn make_element(&mut self, file: &str, is_dir: bool, size: Option<usize>) -> Result<(), Error> {
+        if file == "/" {
+            return Err(Error::FileNameNotAllowError);
+        };
         let parent = self.file_tree.get(self.pwd).unwrap().id();
         let children = self.file_tree.children(parent);
         for child in children {
             if let Some(c) = self.file_tree.get(child) {
                 if c.data.name == file {
-                    return Err(anyhow!("file already exitst"));
+                    return Err(Error::FileAlreadyExistsError);
                 }
             }
         }
         let child = self.file_tree.add_node(File {
-            is_dir: false,
+            is_dir,
             name: file.to_string(),
-            size: Some(size),
+            size,
         });
-        self.file_tree.add_child(parent, child)?;
-        Ok(())
-    }
-    pub fn mkdir(&mut self, file: &str) -> Result<()> {
-        let parent = self.file_tree.get(self.pwd).unwrap().id();
-        let children = self.file_tree.children(parent);
-        for child in children {
-            if let Some(c) = self.file_tree.get(child) {
-                if c.data.name == file {
-                    return Err(anyhow!("file already exitst"));
-                }
-            }
-        }
-        let child = self.file_tree.add_node(File {
-            is_dir: true,
-            name: file.to_string(),
-            size: None,
-        });
-        self.file_tree.add_child(parent, child)?;
+        self.file_tree
+            .add_child(parent, child)
+            .or(Err(Error::OperationNotPermittedError))?;
         Ok(())
     }
 }
