@@ -115,11 +115,3 @@ fn main() -> Result<()> {
     println!("Day 7 part 1: {}", sum[0]);
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_name() {}
-}
