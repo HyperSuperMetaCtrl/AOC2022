@@ -19,7 +19,7 @@ pub struct Node<T> {
     pub data: T,
 }
 
-impl<'a, T> Node<T> {
+impl<T> Node<T> {
     pub fn id(&self) -> NodeId {
         self.id
     }
@@ -30,6 +30,7 @@ impl<'a, T> Node<T> {
         &self.parent
     }
 }
+
 impl<T> Tree<T> {
     pub fn new() -> Self {
         Self { arena: vec![] }
@@ -92,24 +93,15 @@ impl<T> Tree<T> {
         }
         Ok(())
     }
-    pub fn iter_mut<'a>(&'a self, root: NodeId) -> DfsIter<'a, T> {
-        DfsIter {
-            tree: &self,
-            current_id: root,
-            root,
-        }
-    }
 }
-pub struct DfsIter<'a, T> {
-    tree: &'a Tree<T>,
-    current_id: NodeId,
-    root: NodeId,
+struct DfsIter<'a, T> {
+    current: &'a Node<T>,
+    root: &'a Node<T>,
 }
-
 impl<'a, T> Iterator for DfsIter<'a, T> {
     type Item = RefMut<'a, Node<T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unimplemented!()
+        todo!()
     }
 }

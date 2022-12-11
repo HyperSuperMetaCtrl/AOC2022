@@ -1,8 +1,9 @@
 use anyhow::Result;
-
 use std::{env, fs::read_to_string};
 
-use day7::tree::*;
+mod filesystem;
+
+use filesystem::*;
 
 const FILENAME: &str = "input.txt";
 
@@ -27,32 +28,33 @@ fn parse_input(input: &str) -> Vec<Command> {
         })
         .collect()
 }
+
+fn add_files_and_dirs(fs: &mut FileSystem, files: Vec<&str>) -> Result<()> {
+    for file in files {
+        let file: Vec<_> = file.split(" ").collect();
+        match file[0] {
+            "dir" => fs.mkdir(file[1])?,
+            _ => fs.mkfile(file[1], file[0].parse::<usize>().unwrap())?,
+        };
+    }
+    Ok(())
+}
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let path = if args.len() >= 2 { &args[1] } else { FILENAME };
     let input = read_to_string(path)?;
     let parsed = parse_input(&input);
 
-    let mut pwd: Vec<String> = vec![];
-    let mut pwd_id: NodeId;
+    let mut fs = FileSystem::new();
 
-    // for command in parsed {
-    //     match command {
-    //         Command::LS(children) => todo!(),
-    //         Command::CD("..") => todo!(),
-    //         Command::CD(directory) => todo!(),
-    //     }
-    // }
-
-    let mut fs = Tree::<File>::new();
-
+    for command in parsed {
+        match command {
+            Command::LS(files) => add_files_and_dirs(&mut fs, files)?,
+            Command::CD(directory) => fs.cd(directory)?,
+        }
+    }
+    dbg!(fs);
     Ok(())
-}
-
-#[derive(Debug)]
-struct File<'a> {
-    name: &'a str,
-    size: Option<usize>,
 }
 
 #[cfg(test)]

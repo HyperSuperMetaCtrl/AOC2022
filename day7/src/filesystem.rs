@@ -4,9 +4,9 @@ use thiserror::Error;
 
 #[derive(Debug)]
 pub struct File {
-    is_dir: bool,
-    name: String,
-    size: Option<usize>,
+    pub is_dir: bool,
+    pub name: String,
+    pub size: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -100,5 +100,8 @@ impl FileSystem {
             .add_child(parent, child)
             .or(Err(Error::OperationNotPermittedError))?;
         Ok(())
+    }
+    fn update_sizes(fs: &mut Self, id: NodeId) {
+        unimplemented!();
     }
 }
