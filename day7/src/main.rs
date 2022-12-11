@@ -3,6 +3,8 @@ use std::{env, fs::read_to_string};
 
 mod filesystem;
 
+use day7::tree::*;
+
 use filesystem::*;
 
 const FILENAME: &str = "input.txt";
@@ -53,7 +55,64 @@ fn main() -> Result<()> {
             Command::CD(directory) => fs.cd(directory)?,
         }
     }
-    dbg!(fs);
+
+    for node in fs.file_tree().dfs_iter(NodeId { index: 0 }) {
+        if let Some(node) = node {
+            match node {
+                mut node if node.data.is_dir => {
+                    node.data.size = Some(
+                        node.children()
+                            .iter()
+                            .filter_map(|child| fs.file_tree().get(*child)?.data.size)
+                            .sum(),
+                    )
+                }
+                _ => (),
+            }
+        }
+    }
+
+    let sum: usize = fs
+        .file_tree()
+        .arena_iter()
+        .filter_map(|x| {
+            let Some(node) = x else {return None};
+            let Some(size) = node.borrow().data.size else {return None};
+
+            if size <= 100000 && node.borrow().data.is_dir {
+                return Some(size);
+            } else {
+                None
+            }
+        })
+        .sum();
+    println!("Day 7 part 1: {}", sum);
+
+    let root_size = fs
+        .file_tree()
+        .get(NodeId { index: 0 })
+        .unwrap()
+        .data
+        .size
+        .unwrap();
+    let min_size = 30000000 - (70000000 - root_size);
+    let mut sum: Vec<usize> = fs
+        .file_tree()
+        .arena_iter()
+        .filter_map(|x| {
+            let Some(node) = x else {return None};
+            let Some(size) = node.borrow().data.size else {return None};
+
+            if size >= min_size && node.borrow().data.is_dir {
+                return Some(size);
+            } else {
+                None
+            }
+        })
+        .collect();
+    sum.sort();
+
+    println!("Day 7 part 1: {}", sum[0]);
     Ok(())
 }
 

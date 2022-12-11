@@ -101,7 +101,7 @@ impl FileSystem {
             .or(Err(Error::OperationNotPermittedError))?;
         Ok(())
     }
-    fn update_sizes(fs: &mut Self, id: NodeId) {
-        unimplemented!();
+    pub fn file_tree(&self) -> &Tree<File> {
+        &self.file_tree
     }
 }

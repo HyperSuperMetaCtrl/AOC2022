@@ -1,5 +1,7 @@
 use anyhow::{anyhow, Result};
+use std::borrow::BorrowMut;
 use std::cell::{Ref, RefCell, RefMut};
+use std::slice::Iter;
 
 #[derive(Debug)]
 pub struct Tree<T> {
@@ -92,24 +94,49 @@ impl<T> Tree<T> {
         }
         Ok(())
     }
-    pub fn iter_mut<'a>(&'a self, root: NodeId) -> DfsIter<'a, T> {
-        DfsIter {
-            tree: &self,
-            current_id: root,
-            root,
+    pub fn arena_iter<'a>(&'a self) -> ArenaIter<'a, T> {
+        ArenaIter {
+            vec_iter: self.arena.iter(),
+        }
+    }
+    pub fn dfs_iter<'a>(&'a self, root: NodeId) -> DfsIterMut<'a, T> {
+        DfsIterMut {
+            tree: self,
+            stack: vec![root],
+            stack_out: vec![],
         }
     }
 }
-pub struct DfsIter<'a, T> {
-    tree: &'a Tree<T>,
-    current_id: NodeId,
-    root: NodeId,
+pub struct ArenaIter<'a, T> {
+    vec_iter: Iter<'a, Option<RefCell<Node<T>>>>,
 }
 
-impl<'a, T> Iterator for DfsIter<'a, T> {
-    type Item = RefMut<'a, Node<T>>;
+impl<'a, T> Iterator for ArenaIter<'a, T> {
+    type Item = &'a Option<RefCell<Node<T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unimplemented!()
+        self.vec_iter.next()
+    }
+}
+
+pub struct DfsIterMut<'a, T> {
+    tree: &'a Tree<T>,
+    stack: Vec<NodeId>,
+    stack_out: Vec<NodeId>,
+}
+impl<'a, T> Iterator for DfsIterMut<'a, T> {
+    type Item = Option<RefMut<'a, Node<T>>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while !self.stack.is_empty() {
+            let node = self.stack.pop()?;
+            self.stack_out.push(node);
+            self.tree
+                .children(node)
+                .iter()
+                .for_each(|child| self.stack.push(*child));
+        }
+        let id = self.stack_out.pop()?;
+        Some(self.tree.get_mut(id))
     }
 }
