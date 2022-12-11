@@ -112,6 +112,6 @@ fn main() -> Result<()> {
         .collect();
     sum.sort();
 
-    println!("Day 7 part 1: {}", sum[0]);
+    println!("Day 7 part 2: {}", sum[0]);
     Ok(())
 }
