@@ -15,7 +15,7 @@ fn read_input_to_array() -> Result<(Array2<i32>, Array2<i32>)> {
     let colums = input[0].len();
 
     let mut array = Array2::<i32>::zeros((rows, colums));
-    let mut array1 = Array2::<i32>::zeros((rows, colums));
+    let array1 = Array2::<i32>::zeros((rows, colums));
 
     for (i, row) in input.iter().enumerate() {
         for (j, column) in row.iter().enumerate() {
@@ -28,26 +28,22 @@ fn read_input_to_array() -> Result<(Array2<i32>, Array2<i32>)> {
 fn main() -> Result<()> {
     let (array, mut array1) = read_input_to_array()?;
 
-    array.indexed_iter().for_each(|(a, b)| {
-        if *b
-            > *array
-                .slice(s![..a.0, a.1])
-                .as_slice()
-                .unwrap()
-                .iter()
-                .max()
-                .unwrap()
-            || *b
-                > *array
-                    .slice(s![a.0.., a.1])
-                    .as_slice()
-                    .unwrap()
-                    .iter()
-                    .max()
-                    .unwrap()
+    for (idx, elem) in array.indexed_iter() {
+        let slice_right = array.slice(s![..idx.0, idx.1]);
+        let slice_left = array.slice(s![idx.0 + 1.., idx.1]);
+        let slice_up = array.slice(s![idx.0, ..idx.1]);
+        let slice_down = array.slice(s![idx.0, idx.1 + 1..]);
+
+        if *elem > *slice_right.iter().max().unwrap_or(&-1)
+            || *elem > *slice_left.iter().max().unwrap_or(&-1)
+            || *elem > *slice_up.iter().max().unwrap_or(&-1)
+            || *elem > *slice_down.iter().max().unwrap_or(&-1)
         {
-            array1[[a.0, a.1]] = 1;
+            array1[[idx.0, idx.1]] = 1;
         }
-    });
+    }
+    let sum = array1.sum();
+    println!("Day 8 part1: {}", sum);
+
     Ok(())
 }
