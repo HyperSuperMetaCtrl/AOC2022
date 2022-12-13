@@ -1,5 +1,5 @@
 [package]
-name = "day8"
+name = "day9"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.66"
-ndarray = "0.15.6"
 num = "0.4.0"
