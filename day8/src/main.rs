@@ -81,7 +81,6 @@ fn main() -> Result<()> {
         }
         scores.push(left * right * up * down);
     }
-    dbg!(&scores);
     println!("Day 8 part 2: {}", scores.iter().max().unwrap());
 
     Ok(())
