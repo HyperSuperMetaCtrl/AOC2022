@@ -1,7 +1,7 @@
 import System.IO( isEOF )
 main = do
   res <- mainloop 1 []
-  print . sum $ res
+  print . sum. reverse $  res
 
 
 getpair = do
@@ -32,7 +32,8 @@ com1 x ('1':'0':ys) = com1 x (':':ys)
 -- remove paranthesis and commas
 com1 ('[':xs) ('[':ys) = com1 xs ys
 com1 (']':xs) (']':ys) = com1 xs ys
-com1 (',':xs) (',':ys) = com1 xs ys
+com1 (',':xs) y = com1 xs y
+com1 x (',':ys) = com1 x  ys
 -- if one list runs out before the other cases
 com1 (']':xs) y         = True
 com1 x        (']':ys)  = False
