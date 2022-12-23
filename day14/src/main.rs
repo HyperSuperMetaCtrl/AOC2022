@@ -44,8 +44,8 @@ impl CaveSystem {
         }
     }
     fn check_left_right(&self, pos: Point) -> Option<Direction> {
-        let left = self.map.get(((pos.0) + 1, (pos.1).saturating_sub(1)))?;
-        let right = self.map.get(((pos.0) + 1, (pos.1) + 1))?;
+        let left = self.map.get((pos.0 - 1, pos.1 + 1))?;
+        let right = self.map.get((pos.0 + 1, pos.1 + 1))?;
 
         match (left, right) {
             (Material::Air, _) => Some(Direction::Left),
@@ -61,8 +61,9 @@ impl CaveSystem {
         loop {
             //spawn sand
             self.map[[spwn_x, spwn_y]] = Material::Sand;
+            let mut pos = self.spawn;
             'inner: loop {
-                let maybe_new_pos1 = self.sand_fall_down(self.spawn);
+                let maybe_new_pos1 = self.sand_fall_down(pos);
                 let Some(new_pos1) = maybe_new_pos1 else { return count};
                 let maybe_dir = self.check_left_right(new_pos1);
                 let Some(dir) = maybe_dir else { return count};
@@ -72,6 +73,7 @@ impl CaveSystem {
                     count += 1;
                     break 'inner;
                 }
+                pos = new_pos2;
             }
         }
     }
@@ -86,24 +88,26 @@ impl CaveSystem {
         self.map[[pos.0, pos.1]] = Material::Air;
         match dir {
             Direction::Left => {
-                self.map[[(pos.0) + 1, (pos.1).saturating_sub(1)]] = Material::Sand;
-                ((pos.0) + 1, (pos.1).saturating_sub(1))
+                self.map[[pos.0 - 1, pos.1 + 1]] = Material::Sand;
+                (pos.0 - 1, pos.1 + 1)
             }
             Direction::Right => {
-                self.map[[(pos.0) + 1, (pos.1) + 1]] = Material::Sand;
-                ((pos.0) + 1, (pos.1) + 1)
+                self.map[[pos.0 + 1, pos.1 + 1]] = Material::Sand;
+                (pos.0 + 1, pos.1 + 1)
             }
             Direction::Stay => pos,
         }
     }
     fn find_free_from(&self, pos: Point) -> Option<usize> {
-        self.map
-            .slice(s![pos.0, pos.1..])
+        let index = self
+            .map
+            .slice(s![pos.0, (pos.1 + 1)..])
             .iter()
             .position(|x| match x {
                 Material::Sand | Material::Solid => true,
                 _ => false,
-            })
+            })?;
+        Some(index)
     }
 }
 
@@ -164,6 +168,6 @@ fn main() -> Result<()> {
     cave.draw_structures(parsed_input);
     let count = cave.simulate_sand();
     println!("Count:{}", count);
-    //dbg!(cave.map);
+    dbg!(cave.map);
     Ok(())
 }
