@@ -3,7 +3,7 @@ use itertools::Itertools;
 use ndarray::prelude::*;
 use ndarray::Array2;
 
-type Point = (isize, isize);
+type Point = (usize, usize);
 #[derive(Debug)]
 struct Shape {
     coordinates: Vec<Point>,
@@ -12,12 +12,18 @@ struct Shape {
 enum Material {
     Air,
     Solid,
+    // true means falling
     Sand,
 }
 
 struct CaveSystem {
     map: Array2<Material>,
     spawn: Point,
+}
+enum Direction {
+    Left,
+    Right,
+    Stay,
 }
 impl CaveSystem {
     fn new(shape: (usize, usize), spawn: Point) -> Self {
@@ -37,7 +43,68 @@ impl CaveSystem {
             }
         }
     }
-    fn simulate_sand(&mut self) {}
+    fn check_left_right(&self, pos: Point) -> Option<Direction> {
+        let left = self.map.get(((pos.0) + 1, (pos.1).saturating_sub(1)))?;
+        let right = self.map.get(((pos.0) + 1, (pos.1) + 1))?;
+
+        match (left, right) {
+            (Material::Air, _) => Some(Direction::Left),
+            (Material::Sand | Material::Solid, Material::Air) => Some(Direction::Right),
+            (Material::Sand | Material::Solid, Material::Sand | Material::Solid) => {
+                Some(Direction::Stay)
+            }
+        }
+    }
+    fn simulate_sand(&mut self) -> usize {
+        let (spwn_x, spwn_y) = self.spawn;
+        let mut count = 0;
+        loop {
+            //spawn sand
+            self.map[[spwn_x, spwn_y]] = Material::Sand;
+            'inner: loop {
+                let maybe_new_pos1 = self.sand_fall_down(self.spawn);
+                let Some(new_pos1) = maybe_new_pos1 else { return count};
+                let maybe_dir = self.check_left_right(new_pos1);
+                let Some(dir) = maybe_dir else { return count};
+                let new_pos2 = self.fall_to(new_pos1, dir);
+                if new_pos1 == new_pos2 {
+                    //sand came to rest
+                    count += 1;
+                    break 'inner;
+                }
+            }
+        }
+    }
+    // returns new pos after falling straigt down as far as possible
+    fn sand_fall_down(&mut self, pos: Point) -> Option<Point> {
+        let next_pos = self.find_free_from(pos)?;
+        self.map[[pos.0, pos.1]] = Material::Air;
+        self.map[[pos.0, next_pos]] = Material::Sand;
+        Some((pos.0, next_pos))
+    }
+    fn fall_to(&mut self, pos: Point, dir: Direction) -> Point {
+        self.map[[pos.0, pos.1]] = Material::Air;
+        match dir {
+            Direction::Left => {
+                self.map[[(pos.0) + 1, (pos.1).saturating_sub(1)]] = Material::Sand;
+                ((pos.0) + 1, (pos.1).saturating_sub(1))
+            }
+            Direction::Right => {
+                self.map[[(pos.0) + 1, (pos.1) + 1]] = Material::Sand;
+                ((pos.0) + 1, (pos.1) + 1)
+            }
+            Direction::Stay => pos,
+        }
+    }
+    fn find_free_from(&self, pos: Point) -> Option<usize> {
+        self.map
+            .slice(s![pos.0, pos.1..])
+            .iter()
+            .position(|x| match x {
+                Material::Sand | Material::Solid => true,
+                _ => false,
+            })
+    }
 }
 
 fn parse_input(path: &str) -> Result<Vec<Shape>> {
@@ -52,7 +119,7 @@ fn parse_input(path: &str) -> Result<Vec<Shape>> {
     // trim whitespace
     let trimmed: Vec<Vec<&str>> = splits
         .into_iter()
-        .map(|x| x.into_iter().map(|y| y.trim()).collect())
+        .map(|x| x.into_iter().map(|x| x.trim()).collect())
         .collect();
     let tuples: Vec<Shape> = trimmed
         .into_iter()
@@ -65,7 +132,7 @@ fn parse_input(path: &str) -> Result<Vec<Shape>> {
                     item.split(",")
                         .collect::<Vec<&str>>()
                         .into_iter()
-                        .map(|item| item.parse::<isize>().unwrap())
+                        .map(|item| item.parse::<usize>().unwrap())
                         .collect_tuple()
                         .unwrap()
                 })
@@ -95,7 +162,8 @@ fn main() -> Result<()> {
     let spawn = (500, 0);
     let mut cave = CaveSystem::new((max_x as usize, max_y as usize), spawn);
     cave.draw_structures(parsed_input);
-    println!("{:?}", cave.map);
+    let count = cave.simulate_sand();
+    println!("Count:{}", count);
     //dbg!(cave.map);
     Ok(())
 }
